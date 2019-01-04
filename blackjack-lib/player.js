@@ -8,9 +8,9 @@ class Player extends participant_1.Participant {
         super();
         this.basicStrategy = basicStrategy;
         this.ill18 = ill18;
-        this.bettingRamp = new Map();
+        this.bettingRamp = {};
         for (let i = 0; i < 11; ++i)
-            this.bettingRamp.set(i, bettingRamp[i]);
+            this.bettingRamp[i] = bettingRamp[i];
         this.currentBet = 0;
         this.currentInsuranceBet = 0;
         this.bankroll = 0;
@@ -34,7 +34,7 @@ class Player extends participant_1.Participant {
             adjustedCount = 0;
         if (count > 10)
             adjustedCount = 10;
-        this.currentBet = this.bettingRamp.get(adjustedCount);
+        this.currentBet = this.bettingRamp[adjustedCount];
         this.currentHand().bet = this.currentBet;
         this.makeBet(this.currentBet);
         utils_1.DEBUG(`Player's bet: ${this.currentBet} - Bankroll after bet: ${this.bankroll}`);

@@ -9,7 +9,7 @@ class Game {
         this.numPlayers = 0;
         this.ruleSet = ruleSet;
         this.roundIsOver = true;
-        this.activePlayers = new Map();
+        this.activePlayers = {};
         this.dealer = new dealer_1.Dealer();
         this.shoe = new shoe_1.Shoe(NUMBER_OF_DECKS, CARDS_AFTER_CUT, hiLoCountMap);
         this.shoe.shuffle();
@@ -30,98 +30,97 @@ class Game {
         if (!this.roundIsOver)
             throw new Error('Cannot add player during round.');
         ++this.numPlayers;
-        this.activePlayers.set(this.numPlayers, player);
+        this.activePlayers[this.numPlayers] = player;
     }
     placeBets() {
         this.roundIsOver = false;
         const trueCount = this.shoe.calcTrueCount();
-        this.activePlayers.forEach(p => p.placeBet(trueCount));
+        for (const p in this.activePlayers)
+            this.activePlayers[p].placeBet(trueCount);
     }
     dealRound() {
         // TODO: Check that all active players have placed a bet
-        this.activePlayers.forEach(p => {
-            p.addCardToInitialHand(this.shoe.dealCard());
-        });
+        for (const p in this.activePlayers)
+            this.activePlayers[p].addCardToInitialHand(this.shoe.dealCard());
         this.dealer.addCardToInitialHand(this.shoe.dealCard());
-        this.activePlayers.forEach(p => {
-            p.addCardToInitialHand(this.shoe.dealCard());
-        });
+        for (const p in this.activePlayers)
+            this.activePlayers[p].addCardToInitialHand(this.shoe.dealCard());
         this.dealer.addCardToInitialHand(this.shoe.dealCard());
     }
     placeInsuranceBets() {
         if (this.dealer.currentHand().getCardAt(0).value !== 1)
             return;
-        this.activePlayers.forEach(p => {
-            if (p.usingIll18() &&
+        for (const p in this.activePlayers) {
+            if (this.activePlayers[p].usingIll18() &&
                 this.shoe.calcTrueCount() >= Ill18Indices.insurance) {
-                p.currentInsuranceBet = 0.5 * p.currentBet;
-                p.makeBet(p.currentInsuranceBet);
+                this.activePlayers[p].currentInsuranceBet = 0.5 * this.activePlayers[p].currentBet;
+                this.activePlayers[p].makeBet(this.activePlayers[p].currentInsuranceBet);
             }
-        });
+        }
     }
     resolveInsurance() {
         if (this.dealer.currentHand().getCardAt(0).value !== 1)
             return;
-        this.activePlayers.forEach(p => {
+        for (const p in this.activePlayers) {
             if (this.dealer
                 .currentHand()
                 .getCardAt(1)
                 .valAsInt() === 10)
-                p.bankroll += 3 * p.currentInsuranceBet;
-            p.currentInsuranceBet = 0;
-        });
+                this.activePlayers[p].bankroll += 3 * this.activePlayers[p].currentInsuranceBet;
+            this.activePlayers[p].currentInsuranceBet = 0;
+        }
     }
     playersPlayRound() {
-        this.activePlayers.forEach(p => {
-            for (let i = 0; i < p.hands.length; ++i) {
-                if (p.hands[i].bustedOrDiscarded)
+        for (const p in this.activePlayers) {
+            for (let i = 0; i < this.activePlayers[p].hands.length; ++i) {
+                if (this.activePlayers[p].hands[i].bustedOrDiscarded)
                     continue;
-                p.currentHandIndex = i;
-                if (p.hands[i].numCards() === 1)
-                    p.hands[i].addCardToHand(this.shoe.dealCard());
-                if (i === 0 && p.hands[i].hasBlackjack()) {
+                this.activePlayers[p].currentHandIndex = i;
+                if (this.activePlayers[p].hands[i].numCards() === 1)
+                    this.activePlayers[p].hands[i].addCardToHand(this.shoe.dealCard());
+                if (i === 0 && this.activePlayers[p].hands[i].hasBlackjack()) {
                     utils_1.DEBUG('Player has blackjack');
-                    p.resolveBet(BLACKJACK_MULTIPLIER, p.hands[i].bet);
-                    p.hands[i].bustedOrDiscarded = true;
+                    this.activePlayers[p].resolveBet(BLACKJACK_MULTIPLIER, this.activePlayers[p].hands[i].bet);
+                    this.activePlayers[p].hands[i].bustedOrDiscarded = true;
                 }
                 else {
                     let takeAction = true;
                     while (takeAction) {
-                        const action = p.decideAction(this.shoe.calcTrueCount(), this.dealer
+                        const action = this.activePlayers[p].decideAction(this.shoe.calcTrueCount(), this.dealer
                             .currentHand()
                             .getCardAt(0)
                             .valAsInt());
                         switch (action) {
                             case participant_1.Participant.actions.DOUBLE:
                                 // Can't double, just hit
-                                if (p.hands[i].numCards() !== 2) {
-                                    p.hands[i].addCardToHand(this.shoe.dealCard());
-                                    if (p.hands[i].calcHandTotal() > 21) {
-                                        p.hands[i].bustedOrDiscarded = true;
+                                if (this.activePlayers[p].hands[i].numCards() !== 2) {
+                                    this.activePlayers[p].hands[i].addCardToHand(this.shoe.dealCard());
+                                    if (this.activePlayers[p].hands[i].calcHandTotal() > 21) {
+                                        this.activePlayers[p].hands[i].bustedOrDiscarded = true;
                                         takeAction = false;
                                     }
                                 }
                                 else {
-                                    p.hands[i].addCardToHand(this.shoe.dealCard());
-                                    p.makeBet(p.currentBet);
-                                    p.hands[i].bet = p.hands[i].bet * 2;
-                                    p.currentBet *= 2;
-                                    if (p.hands[i].calcHandTotal() > 21)
-                                        p.hands[i].bustedOrDiscarded = true;
+                                    this.activePlayers[p].hands[i].addCardToHand(this.shoe.dealCard());
+                                    this.activePlayers[p].makeBet(this.activePlayers[p].currentBet);
+                                    this.activePlayers[p].hands[i].bet = this.activePlayers[p].hands[i].bet * 2;
+                                    this.activePlayers[p].currentBet *= 2;
+                                    if (this.activePlayers[p].hands[i].calcHandTotal() > 21)
+                                        this.activePlayers[p].hands[i].bustedOrDiscarded = true;
                                     takeAction = false;
                                 }
                                 break;
                             case participant_1.Participant.actions.HIT:
-                                p.hands[i].addCardToHand(this.shoe.dealCard());
-                                if (p.hands[i].calcHandTotal() > 21) {
-                                    p.hands[i].bustedOrDiscarded = true;
+                                this.activePlayers[p].hands[i].addCardToHand(this.shoe.dealCard());
+                                if (this.activePlayers[p].hands[i].calcHandTotal() > 21) {
+                                    this.activePlayers[p].hands[i].bustedOrDiscarded = true;
                                     takeAction = false;
                                 }
                                 break;
                             case participant_1.Participant.actions.SPLIT:
-                                p.makeBet(p.currentBet);
-                                p.addHandForSplit(p.currentBet, p.hands[i].removeCardAt(1));
-                                p.hands[i].addCardToHand(this.shoe.dealCard());
+                                this.activePlayers[p].makeBet(this.activePlayers[p].currentBet);
+                                this.activePlayers[p].addHandForSplit(this.activePlayers[p].currentBet, this.activePlayers[p].hands[i].removeCardAt(1));
+                                this.activePlayers[p].hands[i].addCardToHand(this.shoe.dealCard());
                                 takeAction = true;
                                 break;
                             case participant_1.Participant.actions.STAND:
@@ -129,15 +128,15 @@ class Game {
                                 break;
                             case participant_1.Participant.actions.DS:
                                 // Can't double, just stand
-                                if (p.hands[i].numCards() !== 2)
+                                if (this.activePlayers[p].hands[i].numCards() !== 2)
                                     takeAction = false;
                                 else {
-                                    p.hands[i].addCardToHand(this.shoe.dealCard());
-                                    p.makeBet(p.currentBet);
-                                    p.hands[i].bet = p.hands[i].bet * 2;
-                                    p.currentBet *= 2;
-                                    if (p.hands[i].calcHandTotal() > 21)
-                                        p.hands[i].bustedOrDiscarded = true;
+                                    this.activePlayers[p].hands[i].addCardToHand(this.shoe.dealCard());
+                                    this.activePlayers[p].makeBet(this.activePlayers[p].currentBet);
+                                    this.activePlayers[p].hands[i].bet = this.activePlayers[p].hands[i].bet * 2;
+                                    this.activePlayers[p].currentBet *= 2;
+                                    if (this.activePlayers[p].hands[i].calcHandTotal() > 21)
+                                        this.activePlayers[p].hands[i].bustedOrDiscarded = true;
                                     takeAction = false;
                                 }
                                 break;
@@ -145,17 +144,17 @@ class Game {
                     }
                 }
             }
-        });
+        }
     }
     playersLeft() {
         let players = false;
-        this.activePlayers.forEach(p => {
-            for (const hand of p.hands)
+        for (const p in this.activePlayers) {
+            for (const hand of this.activePlayers[p].hands)
                 if (!hand.bustedOrDiscarded) {
                     players = true;
                     break;
                 }
-        });
+        }
         return players;
     }
     dealerPlayRound() {
@@ -184,27 +183,27 @@ class Game {
         }
     }
     resolveBets() {
-        this.activePlayers.forEach(p => {
-            for (const hand of p.hands) {
+        for (const p in this.activePlayers) {
+            for (const hand of this.activePlayers[p].hands) {
                 if (hand.bustedOrDiscarded)
                     continue;
                 if (this.dealer.hasBlackjack())
                     hand.hasBlackjack()
-                        ? p.resolveBet(0, hand.bet)
-                        : p.resolveBet(-1, hand.bet);
+                        ? this.activePlayers[p].resolveBet(0, hand.bet)
+                        : this.activePlayers[p].resolveBet(-1, hand.bet);
                 else if (this.dealer.currentHand().bustedOrDiscarded)
-                    p.resolveBet(1, hand.bet);
+                    this.activePlayers[p].resolveBet(1, hand.bet);
                 else {
                     const diff = hand.calcHandTotal() - this.dealer.currentHand().calcHandTotal();
                     if (diff > 0)
-                        p.resolveBet(1, hand.bet);
+                        this.activePlayers[p].resolveBet(1, hand.bet);
                     else if (diff < 0)
-                        p.resolveBet(-1, hand.bet);
+                        this.activePlayers[p].resolveBet(-1, hand.bet);
                     else
-                        p.resolveBet(0, hand.bet);
+                        this.activePlayers[p].resolveBet(0, hand.bet);
                 }
             }
-        });
+        }
     }
     getNumPlayers() {
         return this.numPlayers;
@@ -212,25 +211,18 @@ class Game {
     getPlayerAt(i) {
         if (i < 1)
             throw new Error('Invalid index for player');
-        if (this.activePlayers.size < i)
+        if (!this.activePlayers[i])
             throw new Error('No player here');
-        return this.activePlayers.get(i);
+        return this.activePlayers[i];
     }
     getDealer() {
         return this.dealer;
     }
     cleanUp() {
-        this.activePlayers.forEach(p => p.reset());
+        for (const p in this.activePlayers)
+            this.activePlayers[p].reset();
         this.dealer.reset();
         this.roundIsOver = true;
-    }
-    printGame() {
-        // public dealer: Dealer
-        // private activePlayers: Map<number, Player>
-        // private numPlayers: number
-        // private shoe: Shoe
-        // private roundIsOver: boolean
-        // private ruleSet: IRuleSet
     }
 }
 exports.Game = Game;
