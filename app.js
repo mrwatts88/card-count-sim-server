@@ -17,7 +17,7 @@ app.use(express.static(path.join(__dirname, 'public')))
 
 app.use('/api', indexRouter)
 
-// catch 404 and forward to error handler
+// catch 404 and forward to err or handler
 app.use((req, res, next) => {
   next(createError(404))
 })

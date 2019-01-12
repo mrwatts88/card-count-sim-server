@@ -229,7 +229,7 @@ exports.Game = Game;
 // Constants, enums, etc
 const BLACKJACK_MULTIPLIER = 1.5;
 const NUMBER_OF_DECKS = 6;
-const CARDS_AFTER_CUT = 52;
+const CARDS_AFTER_CUT = 104;
 const hiLoCountMap = {
     1: -1,
     2: 1,
@@ -244,6 +244,21 @@ const hiLoCountMap = {
     11: -1,
     12: -1,
     13: -1,
+};
+const feltCountMap = {
+    1: -2,
+    2: 1,
+    3: 2,
+    4: 2,
+    5: 2,
+    6: 2,
+    7: 1,
+    8: 0,
+    9: 0,
+    10: -2,
+    11: -2,
+    12: -2,
+    13: -2,
 };
 const Ill18Indices = {
     insurance: 3,
